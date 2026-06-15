@@ -14,9 +14,9 @@ const config = defineConfig({
   plugins: [
     devtools(),
     nitro({ 
-      preset: 'cloudflare_module',
-      rollupConfig: { external: [/^@sentry\//] } 
-    }),
+  preset: process.env.NODE_ENV === 'production' ? 'cloudflare-pages' : 'node',
+  rollupConfig: { external: [/^@sentry\//] } 
+}),
     tailwindcss(),
     tanstackStart(),
     viteReact(),

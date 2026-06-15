@@ -8,26 +8,30 @@ export const Route = createFileRoute('/admin/dashboard')({
 
 function DashboardPage() {
   const navigate = useNavigate()
-  const [user, setUser] = useState<any>(null)
   const [entries, setEntries] = useState<any[]>([])
 
-  useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        navigate({ to: '/admin/login' })
-        return
-      }
-      setUser(user)
-
-      const { data } = await supabase
-        .from('entries')
-        .select('*')
-        .order('created_at', { ascending: false })
-      setEntries(data ?? [])
+  async function loadEntries() {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      navigate({ to: '/admin/login' })
+      return
     }
-    init()
+    const { data } = await supabase
+      .from('entries')
+      .select('*')
+      .order('created_at', { ascending: false })
+    setEntries(data ?? [])
+  }
+
+  useEffect(() => {
+    loadEntries()
   }, [])
+
+  async function handleDelete(id: string) {
+    if (!confirm('정말 삭제할까요?')) return
+    await supabase.from('entries').delete().eq('id', id)
+    loadEntries()
+  }
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -63,15 +67,31 @@ function DashboardPage() {
               <th className="pb-2">제목</th>
               <th className="pb-2">카테고리</th>
               <th className="pb-2">날짜</th>
+              <th className="pb-2"></th>
             </tr>
           </thead>
           <tbody>
             {entries.map((entry) => (
-              <tr key={entry.id} className="border-b border-border py-2">
+              <tr key={entry.id} className="border-b border-border">
                 <td className="py-3">{entry.title}</td>
                 <td className="py-3 text-muted-foreground">{entry.category}</td>
                 <td className="py-3 text-muted-foreground">
                   {new Date(entry.created_at).toLocaleDateString('ko-KR')}
+                </td>
+                <td className="py-3 flex gap-3 justify-end">
+                  <Link
+                    to="/admin/edit/$id"
+                    params={{ id: entry.id }}
+                    className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    수정
+                  </Link>
+                  <button
+                    onClick={() => handleDelete(entry.id)}
+                    className="text-xs text-red-400 hover:text-red-600 transition-colors"
+                  >
+                    삭제
+                  </button>
                 </td>
               </tr>
             ))}

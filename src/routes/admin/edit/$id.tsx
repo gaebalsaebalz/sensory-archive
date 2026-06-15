@@ -1,21 +1,21 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../../lib/supabase'
 
-export const Route = createFileRoute('/admin/write')({
-  component: WritePage,
+export const Route = createFileRoute('/admin/edit/$id')({
+  component: EditPage,
 })
 
 const categories = ['visual', 'audio', 'tactile', 'taste', 'scent']
 
-function WritePage() {
+function EditPage() {
+  const { id } = Route.useParams()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [previewUrl, setPreviewUrl] = useState('')
   const [form, setForm] = useState({
     category: 'visual',
-    type: '',
     title: '',
     subtitle: '',
     body: '',
@@ -29,6 +29,24 @@ function WritePage() {
     color_code: '',
   })
 
+  useEffect(() => {
+    async function load() {
+      const { data } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('id', id)
+        .single()
+      if (data) {
+        setForm({
+          ...data,
+          plate_no: data.plate_no?.toString() ?? '',
+        })
+        setPreviewUrl(data.image_url ?? '')
+      }
+    }
+    load()
+  }, [id])
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
     setForm({ ...form, [e.target.name]: e.target.value })
   }
@@ -39,7 +57,7 @@ function WritePage() {
 
     setUploading(true)
     const fileName = `${Date.now()}-${file.name}`
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from('images')
       .upload(fileName, file)
 
@@ -62,13 +80,16 @@ function WritePage() {
     e.preventDefault()
     setLoading(true)
 
-    const { error } = await supabase.from('entries').insert([{
-      ...form,
-      plate_no: form.plate_no ? parseInt(form.plate_no) : null,
-    }])
+    const { error } = await supabase
+      .from('entries')
+      .update({
+        ...form,
+        plate_no: form.plate_no ? parseInt(form.plate_no) : null,
+      })
+      .eq('id', id)
 
     if (error) {
-      alert('저장 실패: ' + error.message)
+      alert('수정 실패: ' + error.message)
       setLoading(false)
     } else {
       navigate({ to: '/admin/dashboard' })
@@ -77,7 +98,7 @@ function WritePage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 py-12">
-      <h1 className="text-2xl font-bold mb-8">새 글 작성</h1>
+      <h1 className="text-2xl font-bold mb-8">글 수정</h1>
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
 
         <div>
@@ -106,26 +127,17 @@ function WritePage() {
             className="border border-border rounded px-3 py-2 text-sm bg-background w-full resize-none" />
         </div>
 
-        {/* 이미지 업로드 */}
         <div>
           <label className="text-xs text-muted-foreground mb-1 block">이미지</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={handleImageUpload}
-            className="text-sm"
-          />
-          {uploading && <p className="text-xs text-muted-foreground mt-1">업로드 중...</p>}
           {previewUrl && (
-            <img src={previewUrl} alt="preview" className="mt-2 w-full max-h-48 object-cover rounded" />
+            <img src={previewUrl} alt="preview" className="mb-2 w-full max-h-48 object-cover rounded" />
           )}
-          {form.image_url && !previewUrl && (
-            <p className="text-xs text-muted-foreground mt-1 break-all">{form.image_url}</p>
-          )}
+          <input type="file" accept="image/*" onChange={handleImageUpload} className="text-sm" />
+          {uploading && <p className="text-xs text-muted-foreground mt-1">업로드 중...</p>}
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground mb-1 block">Entry No. (예: 25-01)</label>
+          <label className="text-xs text-muted-foreground mb-1 block">Entry No.</label>
           <input name="entry_no" value={form.entry_no} onChange={handleChange}
             className="border border-border rounded px-3 py-2 text-sm bg-background w-full" />
         </div>
@@ -146,7 +158,7 @@ function WritePage() {
                 className="border border-border rounded px-3 py-2 text-sm bg-background w-full" />
             </div>
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">재생시간 (예: 05:27)</label>
+              <label className="text-xs text-muted-foreground mb-1 block">재생시간</label>
               <input name="duration" value={form.duration} onChange={handleChange}
                 className="border border-border rounded px-3 py-2 text-sm bg-background w-full" />
             </div>
@@ -170,16 +182,22 @@ function WritePage() {
 
         {form.category === 'scent' && (
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">색상 코드 (예: #SC-04)</label>
+            <label className="text-xs text-muted-foreground mb-1 block">색상 코드</label>
             <input name="color_code" value={form.color_code} onChange={handleChange}
               className="border border-border rounded px-3 py-2 text-sm bg-background w-full" />
           </div>
         )}
 
-        <button type="submit" disabled={loading || uploading}
-          className="bg-foreground text-background rounded px-4 py-2 text-sm hover:opacity-80 transition-opacity mt-4">
-          {loading ? '저장 중...' : '저장'}
-        </button>
+        <div className="flex gap-3 mt-4">
+          <button type="submit" disabled={loading || uploading}
+            className="bg-foreground text-background rounded px-4 py-2 text-sm hover:opacity-80 transition-opacity flex-1">
+            {loading ? '저장 중...' : '수정 완료'}
+          </button>
+          <button type="button" onClick={() => navigate({ to: '/admin/dashboard' })}
+            className="border border-border rounded px-4 py-2 text-sm hover:bg-muted transition-colors">
+            취소
+          </button>
+        </div>
       </form>
     </main>
   )
