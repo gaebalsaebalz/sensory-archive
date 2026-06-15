@@ -24,22 +24,27 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="bg-background text-foreground">
-        <header className="border-b border-border">
-          <nav className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-            <Link to="/" className="text-sm font-medium tracking-widest uppercase">
-              Sensory Archive
-            </Link>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link to="/visual" className="hover:text-foreground transition-colors">Visual</Link>
-              <Link to="/audio" className="hover:text-foreground transition-colors">Audio</Link>
-              <Link to="/tactile" className="hover:text-foreground transition-colors">Tactile</Link>
-              <Link to="/taste" className="hover:text-foreground transition-colors">Taste</Link>
-              <Link to="/scent" className="hover:text-foreground transition-colors">Scent</Link>
-              <Link to="/about" className="hover:text-foreground transition-colors">About</Link>
-              <Link to="/guestbook" className="hover:text-foreground transition-colors">Guestbook</Link>
-            </div>
-          </nav>
-        </header>
+        <header className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-white/20 border-b border-white/20">
+        <nav className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
+          <Link to="/" className="text-black font-semibold">
+            J's Archive of Senses
+          </Link>
+
+          <div className="flex gap-6 text-black text-sm">
+            <Link to="/visual">시각 / Visual</Link>
+            <Link to="/audio">청각 / Auditory</Link>
+            <Link to="/taste">미각 / Taste</Link>
+            <Link to="/scent">후각 / Scent</Link>
+            <Link to="/about">About</Link>
+            <Link to="/guestbook">방명록 / Guestbook</Link>
+          </div>
+        </nav>
+      </header>
+
+      <main className="min-h-screen bg-[#F4EEE4] text-black">
+        {children}
+      </main>
+
         {children}
         <footer className="border-t border-border mt-24">
           <div className="max-w-4xl mx-auto px-4 py-8 text-xs text-muted-foreground text-center">

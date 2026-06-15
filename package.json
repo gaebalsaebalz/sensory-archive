@@ -13,10 +13,13 @@
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",
-    "check": "biome check"
+    "check": "biome check",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name sensory-archive --commit-dirty=true"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource-variable/noto-serif-kr": "^5.2.10",
+    "@fontsource/cormorant-garamond": "^5.2.11",
     "@supabase/supabase-js": "^2.108.1",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",

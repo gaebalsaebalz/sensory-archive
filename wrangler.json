@@ -1,9 +1,0 @@
-{
-  "name": "sensory-archive",
-  "main": "dist/_worker.js/index.js",
-  "compatibility_date": "2026-06-15",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": "./dist"
-  }
-}
